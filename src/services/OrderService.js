@@ -90,20 +90,6 @@ const createOrder = (newOrder) => {
   });
 };
 
-// const deleteManyProduct = (ids) => {
-//     return new Promise(async (resolve, reject) => {
-//         try {
-//             await Product.deleteMany({ _id: ids })
-//             resolve({
-//                 status: 'OK',
-//                 message: 'Delete product success',
-//             })
-//         } catch (e) {
-//             reject(e)
-//         }
-//     })
-// }
-
 const getAllOrderDetails = (id) => {
   return new Promise(async (resolve, reject) => {
     try {
