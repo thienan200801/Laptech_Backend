@@ -51,7 +51,7 @@ const loginUser = (userLogin) => {
       if (checkUser === null) {
         resolve({
           status: "ERR",
-          message: "User không tồn tại",
+          message: "User is not exist",
         });
       }
       const comparePassword = bcrypt.compareSync(password, checkUser.password);

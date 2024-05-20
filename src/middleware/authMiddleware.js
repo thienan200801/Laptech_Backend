@@ -1,13 +1,14 @@
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
+const User = require("../models/UserModel");
 dotenv.config();
 
 const authMiddleWare = (req, res, next) => {
   const tokenHeader = req.headers.token;
 
+  console.log("tokenHeader", tokenHeader);
   // Check if the token header exists and is in the expected format
   if (!tokenHeader || !tokenHeader.startsWith("Bearer ")) {
-    console.log("tokenHeader", tokenHeader);
     return res.status(401).json({
       message: "Authentication failed",
       status: "ERROR",
@@ -16,6 +17,7 @@ const authMiddleWare = (req, res, next) => {
 
   // Extract the token
   const token = tokenHeader.split(" ")[1];
+  console.log("token", token);
 
   jwt.verify(token, process.env.ACCESS_TOKEN, function (err, user) {
     if (err) {
@@ -35,25 +37,43 @@ const authMiddleWare = (req, res, next) => {
   });
 };
 
-const authUserMiddleWare = (req, res, next) => {
-  const token = req.headers.token.split(" ")[1];
-  const userId = req.params.id;
-  jwt.verify(token, process.env.ACCESS_TOKEN, function (err, user) {
-    if (err) {
-      return res.status(404).json({
-        message: "The authemtication",
-        status: "ERROR",
-      });
+const authUserMiddleWare = async (req, res, next) => {
+  try {
+    // Lấy token từ header 'token'
+    let tokenHeader = req.headers.token;
+    while (!tokenHeader) {
+      await new Promise((resolve) => (tokenHeader = req.headers.token)); // Chờ 0.000000ms trước khi kiểm tra lại
     }
-    if (user?.isAdmin || user?.id === userId) {
-      next();
-    } else {
-      return res.status(404).json({
-        message: "The authemtication",
-        status: "ERROR",
-      });
-    }
-  });
+    const token = await tokenHeader.split(" ")[1];
+    // Giải mã token
+    jwt.verify(token, process.env.ACCESS_TOKEN, async function (err, decoded) {
+      if (err) {
+        return res.status(401).json({
+          message: err.message,
+          status: "ERROR",
+        });
+      }
+      try {
+        const user = await User.findOne({
+          _id: decoded.id,
+          "tokens.token": token,
+        });
+        if (!user) {
+          throw new Error("User not found");
+        }
+        req.user = user; // Thiết lập req.user
+        next();
+      } catch (error) {
+        return res.status(401).json({
+          message: error.message,
+          status: "ERROR",
+        });
+      }
+    });
+  } catch (error) {
+    console.log("error", error.message);
+    res.status(401).send({ error: error.message });
+  }
 };
 
 module.exports = {

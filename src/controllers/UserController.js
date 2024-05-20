@@ -6,7 +6,6 @@ const User = require("../models/UserModel");
 const Product = require("../models/ProductModel");
 const Cart = require("../models/CartModel");
 const CommentAndRating = require("../models/CommentAndRating");
-const { use } = require("../routes/UserRouter");
 
 const createUser = async (req, res) => {
   try {
@@ -90,45 +89,59 @@ const updateUser = async (req, res) => {
 };
 const createUserCart = asyncHandler(async (req, res) => {
   const cartItem = req.body; // Assuming req.body is a single cart item
-  const userId = req.params.id;
+  const userId = req.user._id;
 
   try {
     const user = await User.findById(userId);
 
+    //check product exist
+    const checkProduct = await Product.findById(cartItem._id);
+    if (!checkProduct) {
+      return res.status(404).json({
+        status: "ERR",
+        message: "Product not found",
+      });
+    }
+
     // Check if the user already has a cart
     let existingCart = await Cart.findOne({ orderby: user?._id });
-
     if (existingCart) {
-      console.log("cartItem", cartItem);
       // If the user has an existing cart, update it
       const product = {
-        product: cartItem._id,
-        name: cartItem.name,
-        image: cartItem.image,
+        _id: checkProduct._id,
+        name: checkProduct.name,
+        image: checkProduct.image,
         amount: cartItem.amount,
-        price: cartItem.price,
+        price: checkProduct.price,
       };
 
-      const getPrice = await Product.findById(cartItem._id)
-        .select("price")
-        .exec();
-      product.price = getPrice.price;
-
-      // Add the new product to the existing cart
-      existingCart.products.push(product);
-
-      // Recalculate the cart total
-      existingCart.cartTotal = existingCart.products.reduce(
-        (total, product) => total + product.price * product.amount,
-        0
+      //check product exist in cart
+      const productIndex = existingCart.products.findIndex(
+        (product) => product._id.toString() === checkProduct._id.toString()
       );
 
+      if (productIndex !== -1) {
+        existingCart.products[productIndex].amount += cartItem.amount;
+        existingCart.cartTotal = existingCart.products.reduce(
+          (total, product) => total + product.price * product.amount,
+          0
+        );
+        await existingCart.save();
+      } else {
+        // Add the new product to the existing cart
+        existingCart.products.push(product);
+        // Recalculate the cart total
+        existingCart.cartTotal = existingCart.products.reduce(
+          (total, product) => total + product.price * product.amount,
+          0
+        );
+      }
+
       await existingCart.save();
-      res.json(existingCart);
+      res.json({ status: "OK", message: "SUCCESS", data: existingCart });
     } else {
       // If the user doesn't have an existing cart, create a new one
       const product = {
-        product: cartItem._id,
         name: cartItem.name,
         image: cartItem.image,
         amount: cartItem.amount,
@@ -149,7 +162,7 @@ const createUserCart = asyncHandler(async (req, res) => {
       user.cart = newCart._id;
       await user.save();
 
-      res.json(newCart);
+      res.json({ status: "OK", message: "SUCCESS", data: newCart });
     }
   } catch (error) {
     throw new Error(error);
@@ -160,21 +173,14 @@ const getUserCart = asyncHandler(async (req, res) => {
   const _id = req.params.id;
   try {
     const cart = await Cart.findOne({ orderby: _id })
-      .populate("products.product")
+      .populate("products")
       .exec();
-    const cartData = {
-      cartTotal: cart.cartTotal,
-      products: cart.products.map((product) => {
-        return {
-          id: product.product.id,
-          name: product.product.name,
-          amount: product.amount,
-          image: product.product.image,
-          price: product.price,
-        };
-      }),
-    };
-    res.json(cartData);
+
+    res.json({
+      status: "OK",
+      message: "SUCCESS",
+      data: cart,
+    });
   } catch (error) {
     throw new Error(error);
   }
@@ -207,7 +213,7 @@ const updateUserCart = asyncHandler(async (req, res) => {
       const user = await User.findById(userId);
       const existingCart = await Cart.findOne({ orderby: user._id });
       const productIndex = existingCart.products.findIndex(
-        (product) => product.product.toString() === productId
+        (product) => product._id.toString() === productId
       );
       if (productIndex === -1) {
         return res
@@ -218,7 +224,6 @@ const updateUserCart = asyncHandler(async (req, res) => {
       existingCart.cartTotal = existingCart.products.reduce(
         (total, product) => {
           const productTotal = product.price * product.amount;
-          console.log("productTotal", productTotal);
           // Ensure productTotal is a valid number
           return isNaN(productTotal) ? total : total + productTotal;
         },
@@ -231,6 +236,7 @@ const updateUserCart = asyncHandler(async (req, res) => {
         message: "update amount product in cart success",
       });
     } catch (e) {
+      console.log(e, "error");
       return res.status(404).json({
         message: e,
       });
@@ -259,19 +265,22 @@ const deleteProductUserCart = asyncHandler(async (req, res) => {
     try {
       const user = await User.findById(userId);
       const existingCart = await Cart.findOne({ orderby: user._id });
+
       const productIndex = existingCart.products.findIndex(
-        (product) => product.product.toString() === productId
+        (product) => product._id.toString() === productId
       );
       if (productIndex === -1) {
         return res
           .status(404)
           .json({ message: "Product not found in the cart" });
       }
+
       existingCart.products.splice(productIndex, 1);
       existingCart.cartTotal = existingCart.products.reduce(
         (total, product) => total + product.price * product.amount,
         0
       );
+
       await existingCart.save();
       return res.status(200).json({
         status: "OK",
@@ -279,6 +288,7 @@ const deleteProductUserCart = asyncHandler(async (req, res) => {
       });
     } catch (e) {
       return res.status(404).json({
+        status: "ERR",
         message: e,
       });
     }
@@ -386,7 +396,6 @@ const getDetailsUser = async (req, res) => {
 };
 
 const refreshToken = async (req, res) => {
-  console.log("req.cookies.refresh_token", req.cookies.refresh_token);
   try {
     let token = req.cookies.refresh_token;
     if (!token) {
