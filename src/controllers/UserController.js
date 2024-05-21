@@ -398,13 +398,21 @@ const getDetailsUser = async (req, res) => {
 const refreshToken = async (req, res) => {
   try {
     let token = req.cookies.refresh_token;
-    if (!token) {
+    let bodyrefreshToken = req.body.refresh_token;
+    console.log("bodyrefreshToken", bodyrefreshToken);
+    if (!token && !bodyrefreshToken) {
       return res.status(200).json({
         status: "ERR",
         message: "The token is required",
       });
     }
-    const response = await JwtService.refreshTokenJwtService(token);
+    let response;
+    if (token) {
+      response = await JwtService.refreshTokenJwtService(token);
+    } else {
+      response = await JwtService.refreshTokenJwtService(bodyrefreshToken);
+    }
+
     return res.status(200).json(response);
   } catch (e) {
     return res.status(404).json({

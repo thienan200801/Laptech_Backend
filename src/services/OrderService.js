@@ -49,40 +49,41 @@ const createOrder = (newOrder) => {
       });
       const results = await Promise.all(promises);
       const newData = results && results.filter((item) => item.id);
-      if (newData.length) {
-        const arrId = [];
-        newData.forEach((item) => {
-          arrId.push(item.id);
-        });
+      // if (newData.length) {
+      //   const arrId = [];
+      //   newData.forEach((item) => {
+      //     arrId.push(item.id);
+      //   });
+      //   resolve({
+      //     status: "ERR",
+      //     message: `San pham voi id: ${arrId.join(",")} khong du hang`,
+      //   });
+      // } else {
+      const createdOrder = await Order.create({
+        orderItems,
+        shippingAddress: {
+          fullName,
+          address,
+          city,
+          phone,
+        },
+        paymentMethod,
+        itemsPrice,
+        shippingPrice,
+        totalPrice,
+        user: user,
+        isPaid,
+        paidAt,
+      });
+      if (createdOrder) {
+        //await EmailService.sendEmailCreateOrder(email, orderItems);
         resolve({
-          status: "ERR",
-          message: `San pham voi id: ${arrId.join(",")} khong du hang`,
+          status: "OK",
+          message: "success",
+          data: createdOrder,
         });
-      } else {
-        const createdOrder = await Order.create({
-          orderItems,
-          shippingAddress: {
-            fullName,
-            address,
-            city,
-            phone,
-          },
-          paymentMethod,
-          itemsPrice,
-          shippingPrice,
-          totalPrice,
-          user: user,
-          isPaid,
-          paidAt,
-        });
-        if (createdOrder) {
-          //await EmailService.sendEmailCreateOrder(email, orderItems);
-          resolve({
-            status: "OK",
-            message: "success",
-          });
-        }
       }
+      //}
     } catch (e) {
       //   console.log('e', e)
       reject(e);
@@ -131,6 +132,7 @@ const getAllOrderDetails = (id) => {
 
 const getOrderDetails = (id) => {
   return new Promise(async (resolve, reject) => {
+    console.log("id", id);
     try {
       const order = await Order.findById({
         _id: id,
