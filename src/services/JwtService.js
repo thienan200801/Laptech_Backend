@@ -28,7 +28,6 @@ const genneralRefreshToken = async (payload) => {
 
 const refreshTokenJwtService = (token) => {
   return new Promise((resolve, reject) => {
-    console.log("token", token);
     try {
       jwt.verify(token, process.env.REFRESH_TOKEN, async (err, user) => {
         if (err) {
@@ -49,7 +48,7 @@ const refreshTokenJwtService = (token) => {
         });
       });
     } catch (e) {
-      reject(e);
+      //reject(e);
     }
   });
 };

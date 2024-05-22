@@ -87,248 +87,107 @@ const updateUser = async (req, res) => {
     });
   }
 };
-const createUserCart = asyncHandler(async (req, res) => {
-  const cartItem = req.body; // Assuming req.body is a single cart item
+const createUserCart = async (req, res) => {
+  const cartItem = req.body;
   const userId = req.user._id;
 
   try {
-    const user = await User.findById(userId);
-
-    //check product exist
-    const checkProduct = await Product.findById(cartItem._id);
-    if (!checkProduct) {
-      return res.status(404).json({
-        status: "ERR",
-        message: "Product not found",
-      });
-    }
-
-    // Check if the user already has a cart
-    let existingCart = await Cart.findOne({ orderby: user?._id });
-    if (existingCart) {
-      // If the user has an existing cart, update it
-      const product = {
-        _id: checkProduct._id,
-        name: checkProduct.name,
-        image: checkProduct.image,
-        amount: cartItem.amount,
-        price: checkProduct.price,
-      };
-
-      //check product exist in cart
-      const productIndex = existingCart.products.findIndex(
-        (product) => product._id.toString() === checkProduct._id.toString()
-      );
-
-      if (productIndex !== -1) {
-        existingCart.products[productIndex].amount += cartItem.amount;
-        existingCart.cartTotal = existingCart.products.reduce(
-          (total, product) => total + product.price * product.amount,
-          0
-        );
-        await existingCart.save();
-      } else {
-        // Add the new product to the existing cart
-        existingCart.products.push(product);
-        // Recalculate the cart total
-        existingCart.cartTotal = existingCart.products.reduce(
-          (total, product) => total + product.price * product.amount,
-          0
-        );
-      }
-
-      await existingCart.save();
-      res.json({ status: "OK", message: "SUCCESS", data: existingCart });
-    } else {
-      // If the user doesn't have an existing cart, create a new one
-      const product = {
-        name: cartItem.name,
-        image: cartItem.image,
-        amount: cartItem.amount,
-        price: cartItem.price,
-      };
-
-      const getPrice = await Product.findById(cartItem._id)
-        .select("price")
-        .exec();
-      product.price = getPrice.price;
-
-      const newCart = await new Cart({
-        products: [product],
-        cartTotal: product.price * product.amount,
-        orderby: user?._id,
-      }).save();
-
-      user.cart = newCart._id;
-      await user.save();
-
-      res.json({ status: "OK", message: "SUCCESS", data: newCart });
-    }
+    const result = await UserService.createUserCart(userId, cartItem);
+    res.status(200).json(result);
   } catch (error) {
-    throw new Error(error);
+    res.status(500).json({ status: "ERR", message: error.message });
   }
-});
+};
 
-const getUserCart = asyncHandler(async (req, res) => {
-  const _id = req.params.id;
+const getUserCart = async (req, res) => {
+  const userId = req.params.id;
+
   try {
-    const cart = await Cart.findOne({ orderby: _id })
-      .populate("products")
-      .exec();
-
-    res.json({
-      status: "OK",
-      message: "SUCCESS",
-      data: cart,
-    });
+    const result = await UserService.getUserCart(userId);
+    res.status(200).json(result);
   } catch (error) {
-    throw new Error(error);
+    res.status(500).json({ status: "ERR", message: error.message });
   }
-});
+};
 
-const updateUserCart = asyncHandler(async (req, res) => {
+const updateUserCart = async (req, res) => {
   const userId = req.params.id;
   const productId = req.params.idProduct;
   const newAmount = req.body.amount;
-  try {
-    if (!userId) {
-      return res.status(200).json({
-        status: "ERR",
-        message: "The userId is required",
-      });
-    }
-    if (!productId) {
-      return res.status(200).json({
-        status: "ERR",
-        message: "The productId is required",
-      });
-    }
-    if (!newAmount || isNaN(newAmount) || newAmount <= 0) {
-      return res.status(400).json({
-        status: "ERR",
-        message: "Invalid amount provided",
-      });
-    }
-    try {
-      const user = await User.findById(userId);
-      const existingCart = await Cart.findOne({ orderby: user._id });
-      const productIndex = existingCart.products.findIndex(
-        (product) => product._id.toString() === productId
-      );
-      if (productIndex === -1) {
-        return res
-          .status(404)
-          .json({ message: "Product not found in the cart" });
-      }
-      existingCart.products[productIndex].amount = newAmount;
-      existingCart.cartTotal = existingCart.products.reduce(
-        (total, product) => {
-          const productTotal = product.price * product.amount;
-          // Ensure productTotal is a valid number
-          return isNaN(productTotal) ? total : total + productTotal;
-        },
-        0
-      );
 
-      await existingCart.save();
-      return res.status(200).json({
-        status: "OK",
-        message: "update amount product in cart success",
-      });
-    } catch (e) {
-      console.log(e, "error");
-      return res.status(404).json({
-        message: e,
-      });
-    }
-  } catch (error) {
-    throw new Error(error);
+  if (!userId) {
+    return res.status(400).json({
+      status: "ERR",
+      message: "The userId is required",
+    });
   }
-});
+  if (!productId) {
+    return res.status(400).json({
+      status: "ERR",
+      message: "The productId is required",
+    });
+  }
+  if (!newAmount || isNaN(newAmount) || newAmount <= 0) {
+    return res.status(400).json({
+      status: "ERR",
+      message: "Invalid amount provided",
+    });
+  }
 
-const deleteProductUserCart = asyncHandler(async (req, res) => {
+  try {
+    const result = await UserService.updateUserCart(
+      userId,
+      productId,
+      newAmount
+    );
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ status: "ERR", message: error.message });
+  }
+};
+
+const deleteProductUserCart = async (req, res) => {
   const userId = req.params.id;
   const productId = req.params.idProduct;
-  try {
-    if (!userId) {
-      return res.status(200).json({
-        status: "ERR",
-        message: "The userId is required",
-      });
-    }
-    if (!productId) {
-      return res.status(200).json({
-        status: "ERR",
-        message: "The productId is required",
-      });
-    }
-    try {
-      const user = await User.findById(userId);
-      const existingCart = await Cart.findOne({ orderby: user._id });
 
-      const productIndex = existingCart.products.findIndex(
-        (product) => product._id.toString() === productId
-      );
-      if (productIndex === -1) {
-        return res
-          .status(404)
-          .json({ message: "Product not found in the cart" });
-      }
-
-      existingCart.products.splice(productIndex, 1);
-      existingCart.cartTotal = existingCart.products.reduce(
-        (total, product) => total + product.price * product.amount,
-        0
-      );
-
-      await existingCart.save();
-      return res.status(200).json({
-        status: "OK",
-        message: "Delete product in cart success",
-      });
-    } catch (e) {
-      return res.status(404).json({
-        status: "ERR",
-        message: e,
-      });
-    }
-  } catch (e) {
-    return res.status(404).json({
-      message: e,
+  if (!userId) {
+    return res.status(400).json({
+      status: "ERR",
+      message: "The userId is required",
     });
   }
-});
+  if (!productId) {
+    return res.status(400).json({
+      status: "ERR",
+      message: "The productId is required",
+    });
+  }
 
-const deleteAllProductInCart = asyncHandler(async (req, res) => {
+  try {
+    const result = await UserService.deleteProductUserCart(userId, productId);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ status: "ERR", message: error.message });
+  }
+};
+
+const deleteAllProductInCart = async (req, res) => {
   const userId = req.params.id;
-  try {
-    if (!userId) {
-      return res.status(200).json({
-        status: "ERR",
-        message: "The userId is required",
-      });
-    }
-    try {
-      const user = await User.findById(userId);
-      const existingCart = await Cart.findOne({ orderby: user._id });
-      existingCart.products = [];
-      existingCart.cartTotal = 0;
-      await existingCart.save();
-      return res.status(200).json({
-        status: "OK",
-        message: "Delete all product in cart success",
-      });
-    } catch (e) {
-      return res.status(404).json({
-        message: e,
-      });
-    }
-  } catch (e) {
-    return res.status(404).json({
-      message: e,
+
+  if (!userId) {
+    return res.status(400).json({
+      status: "ERR",
+      message: "The userId is required",
     });
   }
-});
+
+  try {
+    const result = await UserService.deleteAllProductInCart(userId);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ status: "ERR", message: error.message });
+  }
+};
 
 const deleteUser = async (req, res) => {
   try {
@@ -340,24 +199,6 @@ const deleteUser = async (req, res) => {
       });
     }
     const response = await UserService.deleteUser(userId);
-    return res.status(200).json(response);
-  } catch (e) {
-    return res.status(404).json({
-      message: e,
-    });
-  }
-};
-
-const deleteMany = async (req, res) => {
-  try {
-    const ids = req.body.ids;
-    if (!ids) {
-      return res.status(200).json({
-        status: "ERR",
-        message: "The ids is required",
-      });
-    }
-    const response = await UserService.deleteManyUser(ids);
     return res.status(200).json(response);
   } catch (e) {
     return res.status(404).json({
@@ -504,6 +345,5 @@ module.exports = {
   getDetailsUser,
   refreshToken,
   logoutUser,
-  deleteMany,
   postCommentAndRating,
 };
