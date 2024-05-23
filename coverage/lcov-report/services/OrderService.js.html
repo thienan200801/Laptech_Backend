@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">89.87% </span>
+                <span class="strong">94.66% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>71/79</span>
+                <span class='fraction'>71/75</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">86.27% </span>
+                <span class="strong">93.61% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>44/51</span>
+                <span class='fraction'>44/47</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">89.87% </span>
+                <span class="strong">94.66% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>71/79</span>
+                <span class='fraction'>71/75</span>
             </div>
         
             
@@ -474,32 +474,32 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -634,10 +634,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -968,21 +968,21 @@ const cancelOrderDetails = (id, data) =&gt; {
           },
           { new: true }
         );
-<span class="cstat-no" title="statement not covered" >        if (productData) {</span>
-<span class="cstat-no" title="statement not covered" >          order = await Order.findByIdAndDelete(id);</span>
-<span class="cstat-no" title="statement not covered" >          if (order === null) {</span>
-<span class="cstat-no" title="statement not covered" >            resolve({</span>
-              status: "ERR",
-              message: "The order is not defined",
-            });
-          }
-        } else {
-<span class="cstat-no" title="statement not covered" >          return {</span>
-            status: "OK",
-            message: "ERR",
-            id: order.product,
-          };
-        }
+        // if (productData) {
+        //   order = await Order.findByIdAndDelete(id);
+        //   if (order === null) {
+        //     resolve({
+        //       status: "ERR",
+        //       message: "The order is not defined",
+        //     });
+        //   }
+        // } else {
+<span class="cstat-no" title="statement not covered" >        return {</span>
+          status: "OK",
+          message: "ERR",
+          id: order.product,
+        };
+        //}
       });
       const results = await Promise.all(promises);
       const newData = results &amp;&amp; results[0] &amp;&amp; <span class="branch-2 cbranch-no" title="branch not covered" >results[0].id;</span>
@@ -1072,7 +1072,7 @@ module.exports = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2024-05-23T22:55:06.119Z
+                at 2024-05-23T23:01:54.366Z
             </div>
         <script src="../prettify.js"></script>
         <script>

@@ -235,7 +235,6 @@ const createUserCart = async (userId, cartItem) => {
       await newCart.save();
       user.cart = newCart._id;
       await user.save();
-
       return { status: "OK", message: "SUCCESS", data: newCart };
     }
   } catch (error) {

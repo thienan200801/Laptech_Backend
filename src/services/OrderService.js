@@ -235,21 +235,21 @@ const cancelOrderDetails = (id, data) => {
           },
           { new: true }
         );
-        if (productData) {
-          order = await Order.findByIdAndDelete(id);
-          if (order === null) {
-            resolve({
-              status: "ERR",
-              message: "The order is not defined",
-            });
-          }
-        } else {
-          return {
-            status: "OK",
-            message: "ERR",
-            id: order.product,
-          };
-        }
+        // if (productData) {
+        //   order = await Order.findByIdAndDelete(id);
+        //   if (order === null) {
+        //     resolve({
+        //       status: "ERR",
+        //       message: "The order is not defined",
+        //     });
+        //   }
+        // } else {
+        return {
+          status: "OK",
+          message: "ERR",
+          id: order.product,
+        };
+        //}
       });
       const results = await Promise.all(promises);
       const newData = results && results[0] && results[0].id;
