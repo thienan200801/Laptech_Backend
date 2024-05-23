@@ -6,7 +6,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon src/index.js",
-    "jest": "jest"
+    "jest": "jest",
+    "testUser": "jest UserService.test.js",
+    "testProduct": "jest ProductService.test.js",
+    "testOrder": "jest OrderService.test.js",
+    "testProvinces": "jest AppService.test.js"
   },
   "author": "",
   "license": "ISC",
@@ -18,6 +22,7 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-async-handler": "^1.2.0",
+    "faker": "^6.6.6",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.7.2",
     "nodemailer": "^6.9.1",

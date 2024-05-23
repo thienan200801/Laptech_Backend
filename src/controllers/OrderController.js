@@ -11,8 +11,20 @@ const createOrder = async (req, res) => {
       fullName,
       address,
       city,
+      user,
       phone,
+      orderItems,
     } = req.body;
+
+    // Transform _id to product
+    const transformedOrderItems = orderItems.map((item) => {
+      return {
+        ...item,
+        product: item._id,
+      };
+    });
+
+    // Validate input fields
     if (
       !paymentMethod ||
       !itemsPrice ||
@@ -21,18 +33,53 @@ const createOrder = async (req, res) => {
       !fullName ||
       !address ||
       !city ||
-      !phone
+      !phone ||
+      !orderItems ||
+      !Array.isArray(orderItems) ||
+      orderItems.length === 0
     ) {
-      return res.status(200).json({
+      return res.status(400).json({
         status: "ERR",
-        message: "The input is required",
+        message: "All fields are required, including order items.",
       });
     }
-    const response = await OrderService.createOrder(req.body);
+
+    // Validate order items
+    for (const item of transformedOrderItems) {
+      if (
+        !item.product ||
+        !item.amount ||
+        !item.price ||
+        !item.name ||
+        !item.image
+      ) {
+        return res.status(400).json({
+          status: "ERR",
+          message:
+            "Each order item must contain product, amount, price, name, and image fields.",
+        });
+      }
+    }
+
+    const response = await OrderService.createOrder({
+      paymentMethod,
+      itemsPrice,
+      shippingPrice,
+      totalPrice,
+      fullName,
+      address,
+      city,
+      phone,
+      user,
+      orderItems: transformedOrderItems, // Use the transformed orderItems
+    });
+
     return res.status(200).json(response);
   } catch (e) {
-    return res.status(404).json({
-      message: e,
+    console.log(e, "err");
+    return res.status(500).json({
+      status: "ERR",
+      message: e.message,
     });
   }
 };
