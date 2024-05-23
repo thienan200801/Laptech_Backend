@@ -54,14 +54,14 @@ describe("UserService", () => {
       };
 
       const result = await UserService.loginUser(userLogin);
-      console.log(result, "result");
-
       expect(result.status).toEqual("OK");
       expect(result.message).toEqual("LOGIN SUCCESS");
+      //return object data
+      expect(typeof result.data).toBe("object");
     });
   });
 
-  describe("UserService.createUser", () => {
+  describe("createUser", () => {
     function generateRandomString(length) {
       const characters =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -181,6 +181,7 @@ describe("UserService", () => {
       if (result) {
         expect(result).toHaveProperty("status", "OK");
         expect(result).toHaveProperty("message", "SUCCESS");
+        expect(typeof result.data).toBe("object");
       }
     });
 
@@ -469,6 +470,7 @@ describe("UserService", () => {
       );
       if (result) {
         expect(result.status).toEqual("OK");
+        expect(result.message).toEqual("SUCCESS");
       }
     });
 
@@ -483,6 +485,19 @@ describe("UserService", () => {
       );
       if (result) {
         expect(result.status).toEqual("ERR");
+      }
+    });
+
+    it("should update user failed in case data is empty", async () => {
+      const data = {};
+
+      const result = await UserService.updateUser(
+        "664c7f41f56f546b4a76b218", // userID
+        data
+      );
+      if (result) {
+        expect(result.status).toEqual("ERR");
+        expect(result.message).toEqual("The data is required");
       }
     });
   });

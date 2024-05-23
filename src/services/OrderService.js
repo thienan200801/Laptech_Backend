@@ -210,6 +210,7 @@ const cancelOrderDetails = (id, data) => {
   });
 };
 
+//getAllOrder tested
 const getAllOrder = () => {
   return new Promise(async (resolve, reject) => {
     try {

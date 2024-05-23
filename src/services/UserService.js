@@ -108,6 +108,13 @@ const updateUser = (id, data) => {
       const checkUser = await User.findOne({
         _id: id,
       });
+
+      if (!data || Object.keys(data).length === 0) {
+        resolve({
+          status: "ERR",
+          message: "The data is required",
+        });
+      }
       if (checkUser === null) {
         resolve({
           status: "ERR",
