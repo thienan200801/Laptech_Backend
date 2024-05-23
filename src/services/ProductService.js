@@ -131,6 +131,12 @@ const deleteProduct = (id) => {
 //getDetailsProduct tested
 const getDetailsProduct = (id) => {
   return new Promise(async (resolve, reject) => {
+    if (!id) {
+      resolve({
+        status: "ERR",
+        message: "The id is required",
+      });
+    }
     try {
       const product = await Product.findOne({
         _id: id,
@@ -238,11 +244,28 @@ const getAllType = () => {
 const getCommentAndRating = (id) => {
   return new Promise(async (resolve, reject) => {
     try {
+      if (!id) {
+        resolve({
+          status: "ERR",
+          message: "The id is required",
+        });
+      }
+      //check product
+      const checkProduct = await Product.findOne({
+        _id: id,
+      });
+      if (!checkProduct) {
+        resolve({
+          status: "ERR",
+          message: "Product does not exist",
+        });
+      }
       const allCommentAndRating = await CommentAndRating.find({
         productId: id,
       })
         .populate("userId", "name avatar")
         .sort({ createdAt: -1, updatedAt: -1 });
+      console.log(allCommentAndRating, "allCommentAndRating");
       resolve({
         status: "OK",
         message: "Success",
