@@ -19,6 +19,7 @@ describe("UserService", () => {
     mongoose.disconnect();
   });
 
+  // completed
   describe("loginUser", () => {
     it("should return an error if user does not exist", async () => {
       const nonExistentEmail = "nonexistent@example.com";
@@ -61,8 +62,43 @@ describe("UserService", () => {
       //return object data
       expect(typeof result.data).toBe("object");
     });
-  });
 
+    it("should return an error if email is empty", async () => {
+      const userLogin = {
+        email: "",
+        password: "123",
+      };
+      const result = await UserService.loginUser(userLogin);
+      expect(result).toEqual({
+        status: "ERR",
+        message: "Email is invalid",
+      });
+    });
+    it("should return an error if email is wrong format", async () => {
+      const userLogin = {
+        email: "123",
+        password: "123",
+      };
+      const result = await UserService.loginUser(userLogin);
+      expect(result).toEqual({
+        status: "ERR",
+        message: "Email is invalid",
+      });
+    });
+
+    it("should return an error if password is empty", async () => {
+      const userLogin = {
+        email: "test@gmail.com",
+        password: "",
+      };
+      const result = await UserService.loginUser(userLogin);
+      expect(result).toEqual({
+        status: "ERR",
+        message: "Password is invalid",
+      });
+    });
+  });
+  // completed
   describe("createUser", () => {
     function generateRandomString(length) {
       const characters =
@@ -114,6 +150,20 @@ describe("UserService", () => {
       expect(result.message).toEqual("The input is required");
     });
 
+    it("should register failed in case email is wrong format", async () => {
+      const data = {
+        name: randomString,
+        email: "randomString",
+        password: "123",
+        confirmPassword: "123",
+        phone: "0389346149",
+      };
+      const result = await UserService.createUser(data);
+
+      expect(result.status).toEqual("ERR");
+      expect(result.message).toEqual("Email is invalid");
+    });
+
     it("should register failed in case password is empty", async () => {
       const data = {
         name: randomString,
@@ -128,16 +178,28 @@ describe("UserService", () => {
       expect(result.message).toEqual("The input is required");
     });
 
-    it("should register failed in case password is empty", async () => {
+    it("should register failed in case name is empty", async () => {
       const data = {
-        name: randomString,
+        name: "",
         email: `${randomString}TQK@gmail.com`,
-        password: "",
+        password: "123",
         confirmPassword: "123",
         phone: "0389346149",
       };
       const result = await UserService.createUser(data);
+      expect(result.status).toEqual("ERR");
+      expect(result.message).toEqual("The input is required");
+    });
 
+    it("should register failed in case phone is empty", async () => {
+      const data = {
+        name: randomString,
+        email: `${randomString}TQK@gmail.com`,
+        password: "123",
+        confirmPassword: "123",
+        phone: "",
+      };
+      const result = await UserService.createUser(data);
       expect(result.status).toEqual("ERR");
       expect(result.message).toEqual("The input is required");
     });
@@ -158,7 +220,7 @@ describe("UserService", () => {
       );
     });
   });
-
+  // completed
   describe("getDetailUser", () => {
     it("should fetch details user successfully", async () => {
       const result = await UserService.getDetailsUser(
@@ -175,8 +237,38 @@ describe("UserService", () => {
       expect(result).toHaveProperty("status", "ERR");
       expect(result).toHaveProperty("message", "The user is not defined");
     });
-  });
 
+    it("should fetch user failed in case user id is empty", async () => {
+      const result = await UserService.getDetailsUser("");
+      expect(result).toHaveProperty("status", "ERR");
+      expect(result).toHaveProperty("message", "The userId is required");
+    });
+    it("should fetch user failed in case user id is invalid format", async () => {
+      const invalidId = "123"; // Giả sử đây là ID không hợp lệ về mặt định dạng
+
+      jest
+        .spyOn(UserService, "getDetailsUser")
+        .mockImplementation(async (id) => {
+          if (id === invalidId) {
+            throw new Error(
+              'Cast to ObjectId failed for value "123" (type string) at path "_id"'
+            );
+          }
+          return {};
+        });
+
+      try {
+        await UserService.getDetailsUser(invalidId);
+      } catch (error) {
+        expect(error.message).toEqual(
+          'Cast to ObjectId failed for value "123" (type string) at path "_id"'
+        );
+      }
+
+      jest.restoreAllMocks();
+    });
+  });
+  // completed
   describe("getUserCart", () => {
     it("should fetch user cart successfully", async () => {
       const result = await UserService.getUserCart("664b678e48aa92aa6e00d3d3");
@@ -194,8 +286,25 @@ describe("UserService", () => {
         expect(result).toHaveProperty("message", "Cart not found");
       }
     });
-  });
+    it("should fetch user cart failed in case user id is empty", async () => {
+      const result = await UserService.getUserCart("");
+      if (result) {
+        expect(result).toHaveProperty("status", "ERR");
+        expect(result).toHaveProperty("message", "User ID is required");
+      }
+    });
 
+    it("should fetch user cart failed in case user id is invalid format", async () => {
+      try {
+        await UserService.getUserCart("invalid_id");
+      } catch (error) {
+        expect(error.message).toEqual(
+          'Cast to ObjectId failed for value "invalid_id" (type string) at path "_id"'
+        );
+      }
+    });
+  });
+  // completed
   describe("createUserCart", () => {
     it("should create user cart successfully", async () => {
       const cartData = {
@@ -262,8 +371,51 @@ describe("UserService", () => {
         expect(result).toHaveProperty("message", "Product not found");
       }
     });
-  });
 
+    it("should create user cart failed in case user ID is invalid format", async () => {
+      const cartData = {
+        _id: "661966f05ffdc229d25dd781",
+        amount: 1,
+      };
+      try {
+        await UserService.createUserCart("invalid_id", cartData);
+      } catch (error) {
+        expect(error.message).toEqual(
+          'Cast to ObjectId failed for value "invalid_id" (type string) at path "_id"'
+        );
+      }
+    });
+
+    it("should create user cart failed in case product ID is invalid format", async () => {
+      const cartData = {
+        _id: "invalid_product_id",
+        amount: 1,
+      };
+      try {
+        await UserService.createUserCart("664b678e48aa92aa6e00d3d3", cartData);
+      } catch (error) {
+        expect(error.message).toEqual(
+          'Cast to ObjectId failed for value "invalid_product_id" (type string) at path "_id"'
+        );
+      }
+    });
+    it("should create user cart failed in case amount is invalid", async () => {
+      const cartData = {
+        _id: "661966f05ffdc229d25dd781",
+        amount: -1, // Invalid amount
+      };
+
+      const result = await UserService.createUserCart(
+        "664b678e48aa92aa6e00d3d3",
+        cartData
+      );
+      if (result) {
+        expect(result).toHaveProperty("status", "ERR");
+        expect(result).toHaveProperty("message", "Invalid amount");
+      }
+    });
+  });
+  // completed
   describe("updateUserCart", () => {
     //userID, productId, newAmount
     it("should add user cart successfully", async () => {
@@ -312,8 +464,64 @@ describe("UserService", () => {
         );
       }
     });
-  });
 
+    it("should add user cart fail in case amount is wrong", async () => {
+      const amount = "abcsda";
+      const result = await UserService.updateUserCart(
+        "664b678e48aa92aa6e00d3d3",
+        "661966f05ffdc229d25dd781",
+        amount
+      );
+      if (result) {
+        expect(result).toHaveProperty("status", "ERR");
+        expect(result).toHaveProperty("message", "Amount is invalid");
+      }
+    });
+
+    it("should fail to update user cart if amount is negative", async () => {
+      const amount = -5; // Negative amount
+      const result = await UserService.updateUserCart(
+        "664b678e48aa92aa6e00d3d3",
+        "661966f05ffdc229d25dd781",
+        amount
+      );
+      if (result) {
+        expect(result).toHaveProperty("status", "ERR");
+        expect(result).toHaveProperty("message", "Amount is invalid");
+      }
+    });
+
+    it("should fail to update user cart if userID is in invalid format", async () => {
+      const amount = 6;
+      try {
+        await UserService.updateUserCart(
+          "invalid_user_id",
+          "661966f05ffdc229d25dd781",
+          amount
+        );
+      } catch (error) {
+        expect(error.message).toEqual(
+          'Cast to ObjectId failed for value "invalid_user_id" (type string) at path "_id"'
+        );
+      }
+    });
+
+    it("should fail to update user cart if productID is in invalid format", async () => {
+      const amount = 6;
+      try {
+        await UserService.updateUserCart(
+          "664b678e48aa92aa6e00d3d3",
+          "invalid_product_id",
+          amount
+        );
+      } catch (error) {
+        expect(error.message).toEqual(
+          'Cast to ObjectId failed for value "invalid_product_id" (type string) at path "_id"'
+        );
+      }
+    });
+  });
+  // completed
   describe("deleteAllUserCart", () => {
     it("should delete all product in user cart successfully", async () => {
       const cartData = {
@@ -353,6 +561,32 @@ describe("UserService", () => {
         expect(result).toHaveProperty("status", "ERR");
         expect(result).toHaveProperty("message", "User not found");
       }
+    });
+
+    it("should fail to delete all products in user cart if user ID is in invalid format", async () => {
+      const cartData = {
+        _id: "661966f05ffdc229d25dd781",
+        amount: 1,
+      };
+      await UserService.createUserCart("664b678e48aa92aa6e00d3d3", cartData);
+      try {
+        await UserService.deleteAllProductInCart("invalid_user_id");
+      } catch (error) {
+        expect(error.message).toEqual(
+          'Cast to ObjectId failed for value "invalid_user_id" (type string) at path "_id"'
+        );
+      }
+    });
+
+    it("should return success when deleting all products in an empty cart", async () => {
+      const result = await UserService.deleteAllProductInCart(
+        "664b678e48aa92aa6e00d3d3"
+      );
+      expect(result).toHaveProperty("status", "OK");
+      expect(result).toHaveProperty(
+        "message",
+        "Deleted all products in cart successfully"
+      );
     });
   });
 
@@ -407,6 +641,37 @@ describe("UserService", () => {
       );
       expect(result).toHaveProperty("status", "ERR");
       expect(result).toHaveProperty("message", "Product not found in the cart");
+    });
+
+    it("should delete product in user cart fail in case user ID is in invalid format", async () => {
+      try {
+        await UserService.deleteProductUserCart(
+          "invalid_user_id", // invalid userID format
+          "661966f05ffdc229d25dd781" // productID
+        );
+      } catch (error) {
+        expect(error.message).toEqual(
+          'Cast to ObjectId failed for value "invalid_user_id" (type string) at path "_id"'
+        );
+      }
+    });
+
+    it("should delete product in user cart fail in case product ID is in invalid format", async () => {
+      const cartData = {
+        _id: "661966f05ffdc229d25dd781",
+        amount: 1,
+      };
+      await UserService.createUserCart("664b678e48aa92aa6e00d3d3", cartData);
+      try {
+        await UserService.deleteProductUserCart(
+          "664b678e48aa92aa6e00d3d3", // userID
+          "invalid_product_id" // invalid productID format
+        );
+      } catch (error) {
+        expect(error.message).toEqual(
+          'Cast to ObjectId failed for value "invalid_product_id" (type string) at path "_id"'
+        );
+      }
     });
   });
 
@@ -490,6 +755,20 @@ describe("UserService", () => {
       }
     });
 
+    it("should update user failed in case id is black", async () => {
+      const data = {
+        name: "TQK DEPZAI quaaazzz",
+      };
+
+      const result = await UserService.updateUser(
+        "", // userID
+        data
+      );
+      if (result) {
+        expect(result.status).toEqual("ERR");
+      }
+    });
+
     it("should update user failed in case data is empty", async () => {
       const data = {};
 
@@ -500,6 +779,21 @@ describe("UserService", () => {
       if (result) {
         expect(result.status).toEqual("ERR");
         expect(result.message).toEqual("The data is required");
+      }
+    });
+
+    it("should update user failed in case some thing is empty", async () => {
+      const data = {
+        name: "",
+      };
+
+      const result = await UserService.updateUser(
+        "664c7f41f56f546b4a76b218", // userID
+        data
+      );
+      if (result) {
+        expect(result.status).toEqual("ERR");
+        expect(result.message).toEqual("wrong input data");
       }
     });
   });

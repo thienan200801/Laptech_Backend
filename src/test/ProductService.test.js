@@ -10,7 +10,6 @@ mongoose.connect(MONGODB_URI, {
 });
 
 jest.setTimeout(20000);
-
 const randomName = Math.random().toString(36).substring(7);
 
 describe("fetchAllProduct", () => {
@@ -43,6 +42,7 @@ describe("fetchProductDetails", () => {
   });
 });
 
+//completed
 describe("createProduct", () => {
   function generateRandomString(length) {
     const characters =
@@ -88,6 +88,36 @@ describe("createProduct", () => {
   });
 
   it("should create product fail in case name is empty", async () => {
+    const result = await ProductService.createProduct({
+      company: "ASUS",
+      countInStock: "123",
+      description: "123",
+      image: "123",
+      name: "",
+      price: "123000",
+      //rating: "",
+      type: "normal-laptop",
+    });
+    expect(result).toHaveProperty("status", "ERR");
+    expect(result).toHaveProperty("message", "The input is required");
+  });
+
+  it("should create product fail in case countInStock is not a number", async () => {
+    const result = await ProductService.createProduct({
+      company: "ASUS",
+      countInStock: "123",
+      description: "123",
+      image: "123",
+      name: "",
+      price: "123000",
+      //rating: "",
+      type: "normal-laptop",
+    });
+    expect(result).toHaveProperty("status", "ERR");
+    expect(result).toHaveProperty("message", "The input is required");
+  });
+
+  it("should create product fail in case price is not a number", async () => {
     const result = await ProductService.createProduct({
       company: "ASUS",
       countInStock: "123",
@@ -220,6 +250,23 @@ describe("updateProduct", () => {
     expect(result).toHaveProperty("status", "ERR");
     expect(result).toHaveProperty("message", "The input is required");
   });
+
+  it("should update product failed in case description is empty", async () => {
+    const result = await ProductService.updateProduct(
+      "664d88fdb24110a0e6720326",
+      {
+        name: "test-product",
+        type: "normal-laptop",
+        company: "ASUS",
+        price: 123000,
+        countInStock: 13213,
+        description: "",
+        image: "link-image",
+      }
+    );
+    expect(result).toHaveProperty("status", "ERR");
+    expect(result).toHaveProperty("message", "The input is required");
+  });
 });
 
 describe("deleteProduct", () => {
@@ -249,8 +296,26 @@ describe("deleteProduct", () => {
     } catch (error) {}
   });
 
-  it("should delete product failed in case id is not vaialbe", async () => {
+  it("should delete product failed in case id is not available", async () => {
     const result = await ProductService.deleteProduct("noewan5y43fd");
+    expect(result.status).toEqual("ERR");
+    expect(result.message).toEqual("The product is not defined");
+  });
+
+  it("should delete product failed in case id is invalid format", async () => {
+    const invalidId = "123"; // Giả sử đây là ID không hợp lệ về mặt định dạng
+    try {
+      await ProductService.deleteProduct(invalidId);
+    } catch (error) {
+      expect(error.message).toEqual(
+        'Cast to ObjectId failed for value "123" (type string) at path "_id" for model "Product"'
+      );
+    }
+  });
+
+  it("should delete product failed in case product does not exist", async () => {
+    const nonExistentId = "000000000000000000000000"; // Giả sử đây là ID không tồn tại
+    const result = await ProductService.deleteProduct(nonExistentId);
     expect(result.status).toEqual("ERR");
     expect(result.message).toEqual("The product is not defined");
   });
@@ -274,5 +339,40 @@ describe("fetchAllCommentAndRating", () => {
     expect(result.status).toEqual("OK");
     expect(result.message).toEqual("Success");
     expect(result.data).toEqual(expect.any(Array));
+  });
+  it("should return an error when product ID is null", async () => {
+    try {
+      await ProductService.getCommentAndRating(null);
+    } catch (error) {
+      expect(error.message).toEqual("The id is required");
+    }
+  });
+
+  it("should return an error when product ID is invalid format", async () => {
+    const invalidId = "123"; // Giả sử đây là ID không hợp lệ về mặt định dạng
+    try {
+      await ProductService.getCommentAndRating(invalidId);
+    } catch (error) {
+      expect(error.message).toEqual(
+        'Cast to ObjectId failed for value "123" (type string) at path "_id" for model "Product"'
+      );
+    }
+  });
+
+  it("should return an error when product does not exist", async () => {
+    const nonExistentId = "000000000000000000000000"; // Giả sử đây là ID không tồn tại
+    const result = await ProductService.getCommentAndRating(nonExistentId);
+    expect(result.status).toEqual("ERR");
+    expect(result.message).toEqual("Product does not exist");
+  });
+
+  it("should return empty array when no comments or ratings are found", async () => {
+    const productIdWithNoComments = "6579c6712a3482f757370412"; // Giả sử đây là ID của sản phẩm không có bình luận hoặc đánh giá
+    const result = await ProductService.getCommentAndRating(
+      productIdWithNoComments
+    );
+    expect(result.status).toEqual("OK");
+    expect(result.message).toEqual("Success");
+    expect(result.data).toEqual([]);
   });
 });

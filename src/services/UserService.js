@@ -20,6 +20,15 @@ const createUser = (newUser) => {
         message: "The password and confirmPassword is not the same",
       });
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      resolve({
+        status: "ERR",
+        message: "Email is invalid",
+      });
+    }
+
     try {
       const checkUser = await User.findOne({
         email: email,
@@ -54,11 +63,26 @@ const createUser = (newUser) => {
   });
 };
 
-//loginUser tested
+//loginUser tested completed
 const loginUser = (userLogin) => {
   return new Promise(async (resolve, reject) => {
     const { email, password } = userLogin;
-    console.log("userLogin", userLogin);
+
+    if (!password) {
+      resolve({
+        status: "ERR",
+        message: "Password is invalid",
+      });
+    }
+    //check is email is right format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      resolve({
+        status: "ERR",
+        message: "Email is invalid",
+      });
+    }
+
     try {
       const checkUser = await User.findOne({
         email: email,
@@ -105,6 +129,22 @@ const loginUser = (userLogin) => {
 const updateUser = (id, data) => {
   return new Promise(async (resolve, reject) => {
     try {
+      if (!id) {
+        resolve({
+          status: "ERR",
+          message: "The userId is required",
+        });
+      }
+
+      // Kiểm tra từng trường trong đối tượng data
+      for (const key in data) {
+        if (data[key] === null || data[key] === undefined || data[key] === "") {
+          resolve({
+            status: "ERR",
+            message: "wrong input data",
+          });
+        }
+      }
       const checkUser = await User.findOne({
         _id: id,
       });
@@ -115,6 +155,7 @@ const updateUser = (id, data) => {
           message: "The data is required",
         });
       }
+
       if (checkUser === null) {
         resolve({
           status: "ERR",
@@ -143,6 +184,15 @@ const createUserCart = async (userId, cartItem) => {
     const checkProduct = await Product.findById(cartItem._id);
     if (!checkProduct) {
       return { status: "ERR", message: "Product not found" };
+    }
+
+    // Check if the amount is valid
+    if (
+      !cartItem.amount ||
+      cartItem.amount <= 0 ||
+      typeof cartItem.amount !== "number"
+    ) {
+      return { status: "ERR", message: "Invalid amount" };
     }
 
     // Check if the user already has a cart
@@ -201,6 +251,10 @@ const updateUserCart = async (userId, productId, newAmount) => {
       return { status: "ERR", message: "User not found" };
     }
 
+    if (!newAmount || newAmount <= 0 || typeof newAmount !== "number") {
+      return { status: "ERR", message: "Amount is invalid" };
+    }
+
     const existingCart = await Cart.findOne({ orderby: user._id });
     if (!existingCart) {
       return { status: "ERR", message: "Cart not found" };
@@ -233,6 +287,9 @@ const updateUserCart = async (userId, productId, newAmount) => {
 //getUserCart tested
 const getUserCart = async (userId) => {
   try {
+    if (!userId) {
+      return { status: "ERR", message: "User ID is required" };
+    }
     const cart = await Cart.findOne({ orderby: userId })
       .populate("products")
       .exec();
@@ -351,6 +408,12 @@ const getAllUser = () => {
 const getDetailsUser = (id) => {
   return new Promise(async (resolve, reject) => {
     try {
+      if (!id) {
+        resolve({
+          status: "ERR",
+          message: "The userId is required",
+        });
+      }
       const user = await User.findOne({
         _id: id,
       });
