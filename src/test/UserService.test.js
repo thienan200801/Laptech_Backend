@@ -589,7 +589,7 @@ describe("UserService", () => {
       );
     });
   });
-
+  // completed
   describe("deleteAProductUserCart", () => {
     it("should delete all product in user cart successfully", async () => {
       const cartData = {
@@ -674,7 +674,7 @@ describe("UserService", () => {
       }
     });
   });
-
+  // completed
   describe("deleteUser", () => {
     it("should delete a user successfully", async () => {
       function generateRandomString(length) {
@@ -714,8 +714,51 @@ describe("UserService", () => {
         expect(result).toHaveProperty("message", "The user is not defined");
       }
     });
-  });
 
+    it("should delete a user fail when user ID is in invalid format", async () => {
+      const invalidId = "123"; // Giả sử đây là ID không hợp lệ về mặt định dạng
+
+      jest.spyOn(UserService, "deleteUser").mockImplementation(async (id) => {
+        if (id === invalidId) {
+          throw new Error(
+            'Cast to ObjectId failed for value "123" (type string) at path "_id"'
+          );
+        }
+        return {};
+      });
+
+      try {
+        await UserService.deleteUser(invalidId);
+      } catch (error) {
+        expect(error.message).toEqual(
+          'Cast to ObjectId failed for value "123" (type string) at path "_id"'
+        );
+      }
+
+      jest.restoreAllMocks();
+    });
+
+    it("should delete a user fail when user does not exist", async () => {
+      const nonExistentUserId = "507f191e810c19729de860ea"; // Một ID không tồn tại trong cơ sở dữ liệu
+      const result = await UserService.deleteUser(nonExistentUserId);
+      expect(result).toHaveProperty("status", "ERR");
+      expect(result).toHaveProperty("message", "The user is not defined");
+    });
+
+    it("should handle errors when deleting a user", async () => {
+      const mockErrorMessage = "Simulated error occurred";
+      jest
+        .spyOn(UserService, "deleteUser")
+        .mockRejectedValueOnce(new Error(mockErrorMessage));
+
+      try {
+        await UserService.deleteUser("valid_user_id");
+      } catch (error) {
+        expect(error.message).toEqual(mockErrorMessage);
+      }
+    });
+  });
+  // completed
   describe("getAll", () => {
     it("should fetch user successfully", async () => {
       const result = await UserService.getAllUser();
@@ -723,8 +766,35 @@ describe("UserService", () => {
         expect(result).toHaveProperty("status", "OK");
       }
     });
-  });
 
+    it("should return an array of users", async () => {
+      const result = await UserService.getAllUser();
+      expect(Array.isArray(result.data)).toBe(true);
+    });
+
+    it("should handle errors when fetching users", async () => {
+      const mockErrorMessage = "Simulated error occurred";
+      jest
+        .spyOn(UserService, "getAllUser")
+        .mockRejectedValueOnce(new Error(mockErrorMessage));
+
+      try {
+        await UserService.getAllUser();
+      } catch (error) {
+        expect(error.message).toEqual(mockErrorMessage);
+      }
+    });
+
+    it("should return an empty array when no users exist", async () => {
+      jest
+        .spyOn(UserService, "getAllUser")
+        .mockResolvedValueOnce({ status: "OK", data: [] });
+
+      const result = await UserService.getAllUser();
+      expect(result.data).toEqual([]);
+    });
+  });
+  // completed
   describe("updateUser", () => {
     it("should update user successfully", async () => {
       const data = {
@@ -732,7 +802,7 @@ describe("UserService", () => {
       };
 
       const result = await UserService.updateUser(
-        "664c7f41f56f546b4a76b218", // userID
+        "664afdd3092994346ce161cf", // userID
         data
       );
       if (result) {
@@ -794,6 +864,61 @@ describe("UserService", () => {
       if (result) {
         expect(result.status).toEqual("ERR");
         expect(result.message).toEqual("wrong input data");
+      }
+    });
+
+    it("should update user fail when user ID is in invalid format", async () => {
+      const invalidId = "123"; // Giả sử đây là ID không hợp lệ về mặt định dạng
+      const data = {
+        name: "TQK DEPZAI quaaazzz",
+      };
+      jest.spyOn(UserService, "updateUser").mockImplementation(async (id) => {
+        if (id === invalidId) {
+          throw new Error(
+            'Cast to ObjectId failed for value "123" (type string) at path "_id"'
+          );
+        }
+        return {};
+      });
+
+      try {
+        await UserService.updateUser(invalidId, data);
+      } catch (error) {
+        expect(error.message).toEqual(
+          'Cast to ObjectId failed for value "123" (type string) at path "_id"'
+        );
+      }
+
+      jest.restoreAllMocks();
+    });
+
+    it("should handle errors when updating a user", async () => {
+      const mockErrorMessage = "Simulated error occurred";
+      jest
+        .spyOn(UserService, "updateUser")
+        .mockRejectedValueOnce(new Error(mockErrorMessage));
+
+      const data = {
+        name: "TQK DEPZAI quaaazzz",
+      };
+      try {
+        await UserService.updateUser("valid_user_id", data);
+      } catch (error) {
+        expect(error.message).toEqual(mockErrorMessage);
+      }
+    });
+
+    it("should update user failed when email is in invalid format", async () => {
+      const data = {
+        email: "invalid_email",
+      };
+      const result = await UserService.updateUser(
+        "664c7f41f56f546b4a76b218",
+        data
+      );
+      if (result) {
+        expect(result.status).toEqual("ERR");
+        expect(result.message).toEqual("The user is not defined");
       }
     });
   });

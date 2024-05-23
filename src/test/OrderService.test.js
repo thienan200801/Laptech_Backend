@@ -93,6 +93,33 @@ describe("updateStatusOrder", () => {
     expect(result.status).toEqual("ERR");
     expect(result.message).toEqual("The order is not defined");
   });
+
+  it("should update user fail when user ID is in invalid format", async () => {
+    const invalidId = "123"; // Giả sử đây là ID không hợp lệ về mặt định dạng
+    const data = {
+      isDelivered: true,
+    };
+    jest
+      .spyOn(OrderService, "updateStatusOrder")
+      .mockImplementation(async (id) => {
+        if (id === invalidId) {
+          throw new Error(
+            'Cast to ObjectId failed for value "123" (type string) at path "_id"'
+          );
+        }
+        return {};
+      });
+
+    try {
+      await OrderService.updateStatusOrder(invalidId, data);
+    } catch (error) {
+      expect(error.message).toEqual(
+        'Cast to ObjectId failed for value "123" (type string) at path "_id"'
+      );
+    }
+
+    jest.restoreAllMocks();
+  });
 });
 
 describe("createOrder", () => {
@@ -139,6 +166,40 @@ describe("getDetailsOrder", () => {
     expect(result.status).toEqual("ERR");
     expect(result.message).toEqual("The order is not defined");
   });
+
+  it("should return order details with expected format", async () => {
+    const resultCreate = await OrderService.createOrder(dataCreateOrder);
+    if (resultCreate.status === "OK") {
+      const result = await OrderService.getOrderDetails(resultCreate.data._id);
+      expect(result.data).toHaveProperty("_id");
+      expect(result.data).toHaveProperty("orderItems");
+      expect(result.data).toHaveProperty("shippingAddress");
+    }
+  });
+
+  it("should getOrderDetails fail when user ID is in invalid format", async () => {
+    const invalidId = "123"; // Giả sử đây là ID không hợp lệ về mặt định dạng
+    jest
+      .spyOn(OrderService, "getOrderDetails")
+      .mockImplementation(async (id) => {
+        if (id === invalidId) {
+          throw new Error(
+            'Cast to ObjectId failed for value "123" (type string) at path "_id"'
+          );
+        }
+        return {};
+      });
+
+    try {
+      await OrderService.getOrderDetails(invalidId);
+    } catch (error) {
+      expect(error.message).toEqual(
+        'Cast to ObjectId failed for value "123" (type string) at path "_id"'
+      );
+    }
+
+    jest.restoreAllMocks();
+  });
 });
 
 describe("getAllOrderByUSERID", () => {
@@ -169,6 +230,15 @@ describe("getAllOrderByUSERID", () => {
     );
     expect(result.status).toEqual("ERR");
     expect(result.message).toEqual("The order is not defined");
+  });
+
+  it("should return error when userId is in invalid format", async () => {
+    const invalidUserId = "invalidUserId";
+    try {
+      await OrderService.getAllOrderDetails(invalidUserId);
+    } catch (error) {
+      expect(error.message).toMatch(/Cast to ObjectId failed/);
+    }
   });
 });
 

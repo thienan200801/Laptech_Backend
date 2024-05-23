@@ -40,9 +40,39 @@ describe("fetchProductDetails", () => {
     expect(result).toHaveProperty("status", "ERR");
     expect(result).toHaveProperty("message", "The product is not defined");
   });
+
+  it("should return error when productID is null", async () => {
+    const result = await ProductService.getDetailsProduct(null);
+    expect(result).toHaveProperty("status", "ERR");
+    expect(result).toHaveProperty("message", "The id is required");
+  });
+
+  it("should fetch detail fail when product ID is in invalid format", async () => {
+    const invalidId = "123"; // Giả sử đây là ID không hợp lệ về mặt định dạng
+
+    jest
+      .spyOn(ProductService, "getDetailsProduct")
+      .mockImplementation(async (id) => {
+        if (id === invalidId) {
+          throw new Error(
+            'Cast to ObjectId failed for value "123" (type string) at path "_id"'
+          );
+        }
+        return {};
+      });
+
+    try {
+      await ProductService.getDetailsProduct(invalidId);
+    } catch (error) {
+      expect(error.message).toEqual(
+        'Cast to ObjectId failed for value "123" (type string) at path "_id"'
+      );
+    }
+
+    jest.restoreAllMocks();
+  });
 });
 
-//completed
 describe("createProduct", () => {
   function generateRandomString(length) {
     const characters =
@@ -267,6 +297,39 @@ describe("updateProduct", () => {
     expect(result).toHaveProperty("status", "ERR");
     expect(result).toHaveProperty("message", "The input is required");
   });
+
+  it("should fetch detail fail when product ID is in invalid format", async () => {
+    const invalidId = "123"; // Giả sử đây là ID không hợp lệ về mặt định dạng
+
+    jest
+      .spyOn(ProductService, "updateProduct")
+      .mockImplementation(async (id) => {
+        if (id === invalidId) {
+          throw new Error(
+            'Cast to ObjectId failed for value "123" (type string) at path "_id"'
+          );
+        }
+        return {};
+      });
+
+    try {
+      await ProductService.updateProduct(invalidId, {
+        name: "test-product",
+        type: "normal-laptop",
+        company: "ASUS",
+        price: 123000,
+        countInStock: 13213,
+        description: "ffs",
+        image: "link-image",
+      });
+    } catch (error) {
+      expect(error.message).toEqual(
+        'Cast to ObjectId failed for value "123" (type string) at path "_id"'
+      );
+    }
+
+    jest.restoreAllMocks();
+  });
 });
 
 describe("deleteProduct", () => {
@@ -374,5 +437,43 @@ describe("fetchAllCommentAndRating", () => {
     expect(result.status).toEqual("OK");
     expect(result.message).toEqual("Success");
     expect(result.data).toEqual([]);
+  });
+
+  it("should return empty array when there are no product types", async () => {
+    // Giả lập trường hợp không có loại sản phẩm
+    const originalGetAllType = ProductService.getAllType;
+    ProductService.getAllType = jest.fn(() =>
+      Promise.resolve({ status: "OK", message: "Success", data: [] })
+    );
+
+    const result = await ProductService.getAllType();
+    expect(result.data).toEqual([]);
+
+    ProductService.getAllType = originalGetAllType;
+  });
+
+  it("should fetch AllCommentAndRating fail when product ID is in invalid format", async () => {
+    const invalidId = "123"; // Giả sử đây là ID không hợp lệ về mặt định dạng
+
+    jest
+      .spyOn(ProductService, "getCommentAndRating")
+      .mockImplementation(async (id) => {
+        if (id === invalidId) {
+          throw new Error(
+            'Cast to ObjectId failed for value "123" (type string) at path "_id"'
+          );
+        }
+        return {};
+      });
+
+    try {
+      await ProductService.getCommentAndRating(invalidId);
+    } catch (error) {
+      expect(error.message).toEqual(
+        'Cast to ObjectId failed for value "123" (type string) at path "_id"'
+      );
+    }
+
+    jest.restoreAllMocks();
   });
 });

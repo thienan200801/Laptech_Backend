@@ -131,6 +131,12 @@ const deleteProduct = (id) => {
 //getDetailsProduct tested
 const getDetailsProduct = (id) => {
   return new Promise(async (resolve, reject) => {
+    if (!id) {
+      resolve({
+        status: "ERR",
+        message: "The id is required",
+      });
+    }
     try {
       const product = await Product.findOne({
         _id: id,
