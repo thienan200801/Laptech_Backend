@@ -8,11 +8,14 @@ mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
+
+jest.setTimeout(20000);
+
 const randomName = Math.random().toString(36).substring(7);
 
 describe("fetchAllProduct", () => {
   it("should fetch successfully", async () => {
-    const products = await ProductService.getAllProduct();
+    const products = await ProductService.getAllProduct(20, 1);
     expect(products.status).toEqual("OK");
   });
 

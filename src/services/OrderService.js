@@ -1,7 +1,7 @@
 const Order = require("../models/OrderProduct");
 const Product = require("../models/ProductModel");
-const EmailService = require("../services/EmailService");
 
+//createOrder tested
 const createOrder = (newOrder) => {
   return new Promise(async (resolve, reject) => {
     const {
@@ -20,7 +20,48 @@ const createOrder = (newOrder) => {
       email,
     } = newOrder;
     try {
-      const promises = orderItems.map(async (order) => {
+      const transformedOrderItems = orderItems.map((item) => {
+        return {
+          ...item,
+          product: item._id,
+        };
+      });
+      if (
+        !paymentMethod ||
+        !itemsPrice ||
+        !shippingPrice ||
+        !totalPrice ||
+        !fullName ||
+        !address ||
+        !city ||
+        !phone ||
+        !orderItems ||
+        !Array.isArray(orderItems) ||
+        orderItems.length === 0
+      ) {
+        resolve({
+          status: "ERR",
+          message: "All fields are required, including order items.",
+        });
+      }
+
+      for (const item of transformedOrderItems) {
+        if (
+          !item.product ||
+          !item.amount ||
+          !item.price ||
+          !item.name ||
+          !item.image
+        ) {
+          resolve({
+            status: "ERR",
+            message:
+              "Each order item must contain product, amount, price, name, and image fields.",
+          });
+        }
+      }
+
+      transformedOrderItems.map(async (order) => {
         const productData = await Product.findOneAndUpdate(
           {
             _id: order.product,
@@ -47,8 +88,8 @@ const createOrder = (newOrder) => {
           };
         }
       });
-      const results = await Promise.all(promises);
-      const newData = results && results.filter((item) => item.id);
+      //const results = await Promise.all(promises);
+      //const newData = results && results.filter((item) => item.id);
       // if (newData.length) {
       //   const arrId = [];
       //   newData.forEach((item) => {
@@ -60,7 +101,7 @@ const createOrder = (newOrder) => {
       //   });
       // } else {
       const createdOrder = await Order.create({
-        orderItems,
+        transformedOrderItems,
         shippingAddress: {
           fullName,
           address,
@@ -105,13 +146,20 @@ const createOrder = (newOrder) => {
 //     })
 // }
 
+//getAllOrderDetails tested
 const getAllOrderDetails = (id) => {
   return new Promise(async (resolve, reject) => {
     try {
+      if (!id) {
+        resolve({
+          status: "ERR",
+          message: "The userId is required",
+        });
+      }
       const order = await Order.find({
         user: id,
       }).sort({ createdAt: -1, updatedAt: -1 });
-      if (order === null) {
+      if (order === null || order.length === 0) {
         resolve({
           status: "ERR",
           message: "The order is not defined",
@@ -130,10 +178,16 @@ const getAllOrderDetails = (id) => {
   });
 };
 
+//getOrderDetails tested
 const getOrderDetails = (id) => {
   return new Promise(async (resolve, reject) => {
-    console.log("id", id);
     try {
+      if (!id) {
+        resolve({
+          status: "ERR",
+          message: "The order id is required",
+        });
+      }
       const order = await Order.findById({
         _id: id,
       });
@@ -156,10 +210,17 @@ const getOrderDetails = (id) => {
   });
 };
 
+//
 const cancelOrderDetails = (id, data) => {
   return new Promise(async (resolve, reject) => {
     try {
       let order = [];
+      if (!id) {
+        resolve({
+          status: "ERR",
+          message: "The orderId is required",
+        });
+      }
       const promises = data.map(async (order) => {
         const productData = await Product.findOneAndUpdate(
           {
@@ -229,13 +290,20 @@ const getAllOrder = () => {
   });
 };
 
+//updateStatusOrder tested
 const updateStatusOrder = (id, status) => {
   return new Promise(async (resolve, reject) => {
     try {
+      if (!id) {
+        resolve({
+          status: "ERR",
+          message: "The orderId is required",
+        });
+      }
       const checkOrder = await Order.findOne({
         _id: id,
       });
-      if (checkOrder === null) {
+      if (checkOrder === null || checkOrder.length === 0) {
         resolve({
           status: "ERR",
           message: "The order is not defined",

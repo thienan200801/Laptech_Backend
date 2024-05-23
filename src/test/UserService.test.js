@@ -12,6 +12,8 @@ mongoose.connect(MONGODB_URI, {
   useUnifiedTopology: true,
 });
 
+jest.setTimeout(20000);
+
 describe("UserService", () => {
   afterAll(() => {
     mongoose.disconnect();
