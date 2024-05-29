@@ -7,8 +7,8 @@ const { genneralAccessToken, genneralRefreshToken } = require("./JwtService");
 //createUser tested
 const createUser = (newUser) => {
   return new Promise(async (resolve, reject) => {
-    const { name, email, password, confirmPassword, phone, address } = newUser;
-    if (!name || !email || !password || !confirmPassword || !phone) {
+    const { name, email, password, confirmPassword } = newUser;
+    if (!name || !email || !password || !confirmPassword) {
       resolve({
         status: "ERR",
         message: "The input is required",
@@ -44,8 +44,6 @@ const createUser = (newUser) => {
         name,
         email,
         password: hash,
-        phone,
-        address,
       });
       if (createdUser) {
         resolve({
